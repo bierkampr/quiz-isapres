@@ -321,3 +321,113 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--md-sys-color-outline);
 }
+
+/* ==========================================================================
+   No-Scroll Quiz Layout (Split-view on Desktop, Compact on Mobile)
+   ========================================================================== */
+
+.quiz-viewport {
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--md-sys-color-background);
+}
+
+.quiz-top-bar {
+  height: 52px;
+  min-height: 52px;
+  background-color: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-surface-container-high);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.quiz-main-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 16px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 14px 18px;
+  box-sizing: border-box;
+  overflow: hidden;
+  height: calc(100dvh - 55px);
+}
+
+.quiz-question-card {
+  background-color: var(--md-sys-color-surface-container-low);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-sizing: border-box;
+  box-shadow: var(--md-sys-elevation-1);
+}
+
+.quiz-options-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 2px;
+  min-height: 0;
+}
+
+.quiz-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.quiz-option-btn {
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+/* Mobile & Tablet Adaptations */
+@media (max-width: 860px) {
+  .quiz-main-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(120px, auto) 1fr;
+    gap: 10px;
+    padding: 10px 12px;
+    height: calc(100dvh - 55px);
+  }
+
+  .quiz-question-card {
+    padding: 14px 16px;
+    max-height: 38vh;
+    border-radius: var(--md-sys-shape-corner-large);
+  }
+
+  .quiz-question-text {
+    font-size: 15px !important;
+    line-height: 1.35 !important;
+  }
+
+  .quiz-options-card {
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .quiz-option-btn {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+}
+

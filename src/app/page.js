@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import theme from '@/theme/theme';
 import questions from '@/data/questions';
 import WelcomeScreen from './components/WelcomeScreen';
 import QuizScreen from './components/QuizScreen';
@@ -21,12 +19,23 @@ export default function Home() {
   const [screen, setScreen] = useState('welcome'); // 'welcome' | 'quiz' | 'results'
   const [shuffledQuestions, setShuffledQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({}); // { questionId: { selected, correct, verified } }
+  const [answers, setAnswers] = useState({}); // { questionId: { selected, correct, verified, skipped } }
   const [selectedOption, setSelectedOption] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
 
-  const startQuiz = useCallback(() => {
-    const shuffled = shuffleArray(questions);
+  const startQuiz = useCallback(({ mode, tema, limit }) => {
+    let pool = [...questions];
+
+    if (mode === 'tema' && tema) {
+      pool = pool.filter((q) => q.tema === tema);
+    }
+
+    let shuffled = shuffleArray(pool);
+
+    if (limit && shuffled.length > limit) {
+      shuffled = shuffled.slice(0, limit);
+    }
+
     setShuffledQuestions(shuffled);
     setCurrentIndex(0);
     setAnswers({});
@@ -35,32 +44,36 @@ export default function Home() {
     setScreen('quiz');
   }, []);
 
-  const handleSelectOption = useCallback((optionIndex) => {
-    if (!isVerified) {
-      setSelectedOption(optionIndex);
-    }
-  }, [isVerified]);
+  const handleSelectOption = useCallback(
+    (optionIndex) => {
+      if (!isVerified) {
+        setSelectedOption(optionIndex);
+      }
+    },
+    [isVerified]
+  );
 
   const handleVerify = useCallback(() => {
     if (selectedOption === null) return;
     const currentQuestion = shuffledQuestions[currentIndex];
     const isCorrect = selectedOption === currentQuestion.correctIndex;
-    
-    setAnswers(prev => ({
+
+    setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: {
         selected: selectedOption,
         correctIndex: currentQuestion.correctIndex,
         correct: isCorrect,
         verified: true,
-      }
+        skipped: false,
+      },
     }));
     setIsVerified(true);
   }, [selectedOption, shuffledQuestions, currentIndex]);
 
   const handleNext = useCallback(() => {
     if (currentIndex < shuffledQuestions.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
       setSelectedOption(null);
       setIsVerified(false);
     } else {
@@ -70,7 +83,7 @@ export default function Home() {
 
   const handleSkip = useCallback(() => {
     const currentQuestion = shuffledQuestions[currentIndex];
-    setAnswers(prev => ({
+    setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: {
         selected: null,
@@ -78,11 +91,11 @@ export default function Home() {
         correct: false,
         verified: true,
         skipped: true,
-      }
+      },
     }));
-    
+
     if (currentIndex < shuffledQuestions.length - 1) {
-      setCurrentIndex(prev => prev + 1);
+      setCurrentIndex((prev) => prev + 1);
       setSelectedOption(null);
       setIsVerified(false);
     } else {
@@ -103,10 +116,10 @@ export default function Home() {
     const wrongIds = Object.entries(answers)
       .filter(([_, a]) => !a.correct)
       .map(([id]) => parseInt(id));
-    
-    const wrongQuestions = questions.filter(q => wrongIds.includes(q.id));
+
+    const wrongQuestions = questions.filter((q) => wrongIds.includes(q.id));
     const shuffled = shuffleArray(wrongQuestions);
-    
+
     setShuffledQuestions(shuffled);
     setCurrentIndex(0);
     setAnswers({});
@@ -117,18 +130,18 @@ export default function Home() {
 
   const stats = useMemo(() => {
     const entries = Object.values(answers);
-    const correct = entries.filter(a => a.correct).length;
-    const wrong = entries.filter(a => !a.correct && !a.skipped).length;
-    const skipped = entries.filter(a => a.skipped).length;
+    const correct = entries.filter((a) => a.correct).length;
+    const wrong = entries.filter((a) => !a.correct && !a.skipped).length;
+    const skipped = entries.filter((a) => a.skipped).length;
     return { correct, wrong, skipped, total: entries.length };
   }, [answers]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <div>
       {screen === 'welcome' && (
         <WelcomeScreen onStart={startQuiz} totalQuestions={questions.length} />
       )}
+
       {screen === 'quiz' && shuffledQuestions.length > 0 && (
         <QuizScreen
           question={shuffledQuestions[currentIndex]}
@@ -141,8 +154,10 @@ export default function Home() {
           onNext={handleNext}
           onSkip={handleSkip}
           stats={stats}
+          onExit={handleRestart}
         />
       )}
+
       {screen === 'results' && (
         <ResultsScreen
           answers={answers}
@@ -153,6 +168,6 @@ export default function Home() {
           onRetryWrong={handleRetryWrong}
         />
       )}
-    </ThemeProvider>
+    </div>
   );
 }

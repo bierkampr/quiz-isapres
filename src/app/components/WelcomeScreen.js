@@ -1,206 +1,451 @@
 'use client';
 
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-} from '@mui/material';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import QuizRoundedIcon from '@mui/icons-material/QuizRounded';
-import SchoolRoundedIcon from '@mui/icons-material/SchoolRounded';
-import TimerRoundedIcon from '@mui/icons-material/TimerRounded';
+import { useState } from 'react';
+import TopAppBar from './TopAppBar';
 
-export default function WelcomeScreen({ onStart, totalQuestions }) {
+const TEMAS = [
+  { id: 1, title: 'Regulación Agente de Ventas', count: 10, icon: 'badge' },
+  { id: 2, title: 'Plan de Salud, Beneficios y Contratos', count: 19, icon: 'description' },
+  { id: 3, title: 'Cobertura Enfermedades Catastróficas (CAEC)', count: 15, icon: 'health_and_safety' },
+  { id: 4, title: 'Garantías Explícitas en Salud (GES)', count: 16, icon: 'verified_user' },
+  { id: 5, title: 'Afiliación, Cotizaciones y Excedentes', count: 22, icon: 'payments' },
+  { id: 6, title: 'Licencias Médicas y Fiscalización', count: 21, icon: 'gavel' },
+];
+
+export default function WelcomeScreen({ onStart, totalQuestions = 103 }) {
+  const [selectedMode, setSelectedMode] = useState('all'); // 'all' | '25' | '50' | 'tema'
+  const [selectedTema, setSelectedTema] = useState(1);
+
+  const handleStart = () => {
+    onStart({
+      mode: selectedMode,
+      tema: selectedMode === 'tema' ? selectedTema : null,
+      limit: selectedMode === '25' ? 25 : selectedMode === '50' ? 50 : null,
+    });
+  };
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 2,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Box
-          className="animate-fade-in"
-          sx={{
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <TopAppBar title="Quiz Isapres" subtitle="Material Design 3" />
+
+      <main
+        style={{
+          flex: 1,
+          maxWidth: '840px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '24px 16px 48px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+        }}
+      >
+        {/* M3 Hero Section */}
+        <section
+          className="m3-card-elevated m3-animate-in"
+          style={{
+            padding: '32px 24px',
             textAlign: 'center',
+            backgroundColor: 'var(--md-sys-color-surface-container)',
           }}
         >
-          {/* Icon */}
-          <Box
-            sx={{
-              width: 100,
-              height: 100,
-              borderRadius: '28px',
-              background: 'linear-gradient(135deg, #5C6BC0 0%, #26A69A 100%)',
-              display: 'flex',
+          <div
+            style={{
+              display: 'inline-flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              mx: 'auto',
-              mb: 4,
-              boxShadow: '0 8px 32px rgba(92, 107, 192, 0.3)',
+              gap: '6px',
+              padding: '6px 14px',
+              borderRadius: 'var(--md-sys-shape-corner-full)',
+              backgroundColor: 'var(--md-sys-color-primary-container)',
+              color: 'var(--md-sys-color-on-primary-container)',
+              marginBottom: '16px',
             }}
           >
-            <SchoolRoundedIcon sx={{ fontSize: 52, color: '#fff' }} />
-          </Box>
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+              verified
+            </span>
+            <span className="md-typescale-label-medium" style={{ fontWeight: 600 }}>
+              Examen Oficial • 103 Preguntas
+            </span>
+          </div>
 
-          {/* Title */}
-          <Typography
-            variant="h3"
-            sx={{
-              fontWeight: 800,
-              background: 'linear-gradient(135deg, #7986CB 0%, #4DB6AC 100%)',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 1,
-              fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' },
+          <h2
+            className="md-typescale-headline-large"
+            style={{
+              fontWeight: 700,
+              color: 'var(--md-sys-color-on-surface)',
+              marginBottom: '12px',
+              lineHeight: 1.25,
             }}
           >
-            Quiz Isapres
-          </Typography>
+            Preparación para Examen de Isapres
+          </h2>
 
-          <Typography
-            variant="h6"
-            sx={{
-              color: 'text.secondary',
-              mb: 4,
-              fontWeight: 400,
-              fontSize: { xs: '0.95rem', sm: '1.1rem' },
+          <p
+            className="md-typescale-body-large"
+            style={{
+              color: 'var(--md-sys-color-on-surface-variant)',
+              maxWidth: '620px',
+              margin: '0 auto 28px',
+              lineHeight: 1.5,
             }}
           >
-            Prepárate para tu examen de agente de ventas
-          </Typography>
+            Practica con las preguntas oficiales de la prueba. Preguntas en orden aleatorio,
+            verificación instantánea con respuestas correctas destacadas según la pauta oficial.
+          </p>
 
-          {/* Info Card */}
-          <Card
-            className="glass-card"
-            sx={{
-              mb: 4,
-              transition: 'transform 0.3s ease',
-              '&:hover': { transform: 'translateY(-2px)' },
-            }}
-          >
-            <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, justifyContent: 'center', mb: 2.5 }}>
-                <Chip
-                  icon={<QuizRoundedIcon />}
-                  label={`${totalQuestions} preguntas`}
-                  sx={{
-                    bgcolor: 'rgba(92, 107, 192, 0.15)',
-                    color: '#7986CB',
-                    fontWeight: 600,
-                    '& .MuiChip-icon': { color: '#7986CB' },
-                  }}
-                />
-                <Chip
-                  icon={<TimerRoundedIcon />}
-                  label="Orden aleatorio"
-                  sx={{
-                    bgcolor: 'rgba(38, 166, 154, 0.15)',
-                    color: '#4DB6AC',
-                    fontWeight: 600,
-                    '& .MuiChip-icon': { color: '#4DB6AC' },
-                  }}
-                />
-              </Box>
-
-              <Typography variant="body2" sx={{ color: 'text.secondary', lineHeight: 1.7 }}>
-                Las preguntas aparecerán en <strong style={{ color: '#7986CB' }}>orden aleatorio</strong>.
-                Selecciona tu respuesta y presiona <strong style={{ color: '#4DB6AC' }}>Verificar</strong> para
-                saber si es correcta. Al finalizar verás tu puntaje total.
-              </Typography>
-            </CardContent>
-          </Card>
-
-          {/* Topics list */}
-          <Card
-            className="glass-card"
-            sx={{
-              mb: 4,
+          {/* Feature Highlights Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '12px',
               textAlign: 'left',
+              marginBottom: '28px',
             }}
           >
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1.5, textTransform: 'uppercase', letterSpacing: 1, fontSize: '0.7rem' }}>
-                Temas incluidos
-              </Typography>
-              {[
-                'Regulación Agente de Ventas',
-                'Declaración de Salud y Suscripción',
-                'Causales de Término de Contrato',
-                'Obligaciones del Cotizante y la Isapre',
-                'Declaración de Salud',
-                'Condiciones Generales del Contrato',
-                'Planes de Salud',
-                'Cobertura, Arancel y Componentes',
-                'Preexistencias, Restricciones y Topes',
-                'CAEC, GES y Normativa',
-              ].map((topic, i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    py: 0.6,
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                backgroundColor: 'var(--md-sys-color-surface-container-low)',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: 'var(--md-sys-shape-corner-medium)',
+                  backgroundColor: 'var(--md-sys-color-primary-container)',
+                  color: 'var(--md-sys-color-on-primary-container)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span className="material-symbols-outlined">shuffle</span>
+              </div>
+              <div>
+                <h4 className="md-typescale-title-small" style={{ fontWeight: 600, margin: 0 }}>
+                  Orden Aleatorio
+                </h4>
+                <p className="md-typescale-body-small" style={{ margin: 0, color: 'var(--md-sys-color-on-surface-variant)' }}>
+                  Nunca en el mismo orden
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                backgroundColor: 'var(--md-sys-color-surface-container-low)',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: 'var(--md-sys-shape-corner-medium)',
+                  backgroundColor: 'var(--md-sys-color-secondary-container)',
+                  color: 'var(--md-sys-color-on-secondary-container)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span className="material-symbols-outlined">check_circle</span>
+              </div>
+              <div>
+                <h4 className="md-typescale-title-small" style={{ fontWeight: 600, margin: 0 }}>
+                  Feedback Inmediato
+                </h4>
+                <p className="md-typescale-body-small" style={{ margin: 0, color: 'var(--md-sys-color-on-surface-variant)' }}>
+                  Muestra la respuesta correcta
+                </p>
+              </div>
+            </div>
+
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '14px',
+                backgroundColor: 'var(--md-sys-color-surface-container-low)',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: 'var(--md-sys-shape-corner-medium)',
+                  backgroundColor: 'var(--md-sys-color-tertiary-container)',
+                  color: 'var(--md-sys-color-on-tertiary-container)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <span className="material-symbols-outlined">analytics</span>
+              </div>
+              <div>
+                <h4 className="md-typescale-title-small" style={{ fontWeight: 600, margin: 0 }}>
+                  Desglose Final
+                </h4>
+                <p className="md-typescale-body-small" style={{ margin: 0, color: 'var(--md-sys-color-on-surface-variant)' }}>
+                  Revisa y reintenta falladas
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Practice Mode Selector */}
+          <div style={{ marginBottom: '24px', textAlign: 'left' }}>
+            <label
+              className="md-typescale-label-large"
+              style={{ display: 'block', marginBottom: '10px', fontWeight: 600, color: 'var(--md-sys-color-on-surface)' }}
+            >
+              Elige cómo practicar:
+            </label>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              <button
+                onClick={() => setSelectedMode('all')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${selectedMode === 'all' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: selectedMode === 'all' ? 'var(--md-sys-color-primary)' : 'transparent',
+                  color: selectedMode === 'all' ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  all_inclusive
+                </span>
+                Todas (103 preguntas)
+              </button>
+
+              <button
+                onClick={() => setSelectedMode('25')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${selectedMode === '25' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: selectedMode === '25' ? 'var(--md-sys-color-primary)' : 'transparent',
+                  color: selectedMode === '25' ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  bolt
+                </span>
+                Rápida (25 preguntas)
+              </button>
+
+              <button
+                onClick={() => setSelectedMode('50')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${selectedMode === '50' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: selectedMode === '50' ? 'var(--md-sys-color-primary)' : 'transparent',
+                  color: selectedMode === '50' ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  timelapse
+                </span>
+                Media Prueba (50 preguntas)
+              </button>
+
+              <button
+                onClick={() => setSelectedMode('tema')}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${selectedMode === 'tema' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: selectedMode === 'tema' ? 'var(--md-sys-color-primary)' : 'transparent',
+                  color: selectedMode === 'tema' ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+                  category
+                </span>
+                Por Tema específico
+              </button>
+            </div>
+
+            {selectedMode === 'tema' && (
+              <div style={{ marginTop: '16px' }}>
+                <label className="md-typescale-label-medium" style={{ display: 'block', marginBottom: '8px' }}>
+                  Selecciona el tema a practicar:
+                </label>
+                <select
+                  value={selectedTema}
+                  onChange={(e) => setSelectedTema(parseInt(e.target.value))}
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: 'var(--md-sys-shape-corner-medium)',
+                    border: '1px solid var(--md-sys-color-outline)',
+                    backgroundColor: 'var(--md-sys-color-surface)',
+                    color: 'var(--md-sys-color-on-surface)',
+                    fontSize: '15px',
+                    fontFamily: 'inherit',
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 22,
-                      height: 22,
-                      borderRadius: '6px',
-                      bgcolor: 'rgba(92, 107, 192, 0.12)',
+                  {TEMAS.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      Tema {t.id}: {t.title} ({t.count} preguntas)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Primary Action Button */}
+          <div>
+            <md-filled-button
+              onClick={handleStart}
+              style={{
+                '--md-filled-button-container-height': '54px',
+                '--md-filled-button-container-shape': '9999px',
+                fontSize: '16px',
+                fontWeight: '600',
+                padding: '0 32px',
+              }}
+            >
+              <span className="material-symbols-outlined" slot="icon" style={{ fontSize: '22px' }}>
+                play_arrow
+              </span>
+              Iniciar Quiz
+            </md-filled-button>
+          </div>
+        </section>
+
+        {/* Temas Detail Section */}
+        <section>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+            <span className="material-symbols-outlined" style={{ color: 'var(--md-sys-color-primary)' }}>
+              topic
+            </span>
+            <h3 className="md-typescale-title-large" style={{ fontWeight: 600, margin: 0 }}>
+              Contenidos Evaluados (103 Preguntas)
+            </h3>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+              gap: '12px',
+            }}
+          >
+            {TEMAS.map((tema) => (
+              <div
+                key={tema.id}
+                className="m3-card-outlined"
+                style={{
+                  padding: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  backgroundColor: 'var(--md-sys-color-surface-container-lowest)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: 'var(--md-sys-shape-corner-medium)',
+                      backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                      color: 'var(--md-sys-color-on-surface)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
                     }}
                   >
-                    <Typography variant="caption" sx={{ color: '#7986CB', fontWeight: 700, fontSize: '0.65rem' }}>
-                      {i + 1}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.82rem' }}>
-                    {topic}
-                  </Typography>
-                </Box>
-              ))}
-            </CardContent>
-          </Card>
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                      {tema.icon}
+                    </span>
+                  </div>
+                  <div>
+                    <h5 className="md-typescale-title-small" style={{ fontWeight: 600, margin: 0 }}>
+                      Tema {tema.id}
+                    </h5>
+                    <p
+                      className="md-typescale-body-small"
+                      style={{
+                        margin: 0,
+                        color: 'var(--md-sys-color-on-surface-variant)',
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {tema.title}
+                    </p>
+                  </div>
+                </div>
 
-          {/* Start Button */}
-          <Button
-            variant="contained"
-            size="large"
-            onClick={onStart}
-            startIcon={<PlayArrowRoundedIcon />}
-            sx={{
-              background: 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)',
-              fontSize: '1.1rem',
-              py: 1.8,
-              px: 6,
-              borderRadius: '16px',
-              boxShadow: '0 8px 32px rgba(92, 107, 192, 0.35)',
-              transition: 'all 0.3s ease',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #7986CB 0%, #5C6BC0 100%)',
-                transform: 'translateY(-3px)',
-                boxShadow: '0 12px 40px rgba(92, 107, 192, 0.45)',
-              },
-            }}
-          >
-            Iniciar Quiz
-          </Button>
-        </Box>
-      </Container>
-    </Box>
+                <span
+                  className="md-typescale-label-small"
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 'var(--md-sys-shape-corner-full)',
+                    backgroundColor: 'var(--md-sys-color-secondary-container)',
+                    color: 'var(--md-sys-color-on-secondary-container)',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {tema.count} preguntas
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

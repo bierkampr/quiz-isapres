@@ -1,28 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
-import ReplayRoundedIcon from '@mui/icons-material/ReplayRounded';
-import RefreshRoundedIcon from '@mui/icons-material/RefreshRounded';
-import EmojiEventsRoundedIcon from '@mui/icons-material/EmojiEventsRounded';
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
-import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
-import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded';
+import { useState, useMemo } from 'react';
+import TopAppBar from './TopAppBar';
 
-const optionLetters = ['A', 'B', 'C', 'D'];
+const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
 export default function ResultsScreen({
   answers,
@@ -32,299 +13,432 @@ export default function ResultsScreen({
   onRestart,
   onRetryWrong,
 }) {
-  const percentage = Math.round((stats.correct / stats.total) * 100);
+  const [filter, setFilter] = useState('all'); // 'all' | 'wrong' | 'correct'
 
-  const getGradeInfo = () => {
-    if (percentage >= 90) return { emoji: '🏆', label: '¡Excelente!', color: '#66BB6A' };
-    if (percentage >= 70) return { emoji: '🎉', label: '¡Aprobado!', color: '#4DB6AC' };
-    if (percentage >= 50) return { emoji: '💪', label: 'Casi...', color: '#FFA726' };
-    return { emoji: '📚', label: 'A estudiar más', color: '#EF5350' };
-  };
+  const totalAnswered = stats.correct + stats.wrong + stats.skipped;
+  const percentage = totalAnswered > 0 ? Math.round((stats.correct / totalAnswered) * 100) : 0;
+  const isPassing = percentage >= 75;
 
-  const grade = getGradeInfo();
-
-  // Group wrong answers by topic
-  const wrongByTema = useMemo(() => {
-    const groups = {};
-    shuffledQuestions.forEach(q => {
-      const answer = answers[q.id];
-      if (answer && !answer.correct) {
-        if (!groups[q.tema]) {
-          groups[q.tema] = {
-            title: q.temaTitle,
-            questions: [],
-          };
-        }
-        groups[q.tema].questions.push({
-          ...q,
-          userAnswer: answer.selected,
+  const answeredQuestionsList = useMemo(() => {
+    return shuffledQuestions
+      .map((q) => {
+        const answer = answers[q.id];
+        if (!answer) return null;
+        return {
+          question: q,
+          selected: answer.selected,
+          correctIndex: q.correctIndex,
+          isCorrect: answer.correct,
           skipped: answer.skipped,
-        });
-      }
-    });
-    return groups;
-  }, [answers, shuffledQuestions]);
+        };
+      })
+      .filter(Boolean);
+  }, [shuffledQuestions, answers]);
 
-  const circumference = 2 * Math.PI * 70;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const filteredQuestions = useMemo(() => {
+    if (filter === 'wrong') return answeredQuestionsList.filter((item) => !item.isCorrect);
+    if (filter === 'correct') return answeredQuestionsList.filter((item) => item.isCorrect);
+    return answeredQuestionsList;
+  }, [answeredQuestionsList, filter]);
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 6, pt: 4 }}>
-      <Container maxWidth="md">
-        {/* Score Card */}
-        <Card
-          className="glass-card animate-fade-in"
-          sx={{ mb: 4, overflow: 'visible' }}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <TopAppBar title="Quiz Isapres" subtitle="Resultados Finales" showRestart={true} onRestart={onRestart} />
+
+      <main
+        style={{
+          flex: 1,
+          maxWidth: '840px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '24px 16px 64px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+        }}
+      >
+        {/* Results Summary Hero Card */}
+        <section
+          className="m3-card-elevated m3-animate-in"
+          style={{
+            padding: '36px 24px',
+            textAlign: 'center',
+            backgroundColor: 'var(--md-sys-color-surface-container)',
+          }}
         >
-          <CardContent sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
-            {/* Circular Progress */}
-            <Box sx={{ position: 'relative', display: 'inline-flex', mb: 3 }}>
-              <svg width="160" height="160" viewBox="0 0 160 160">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  fill="none"
-                  stroke="rgba(92, 107, 192, 0.1)"
-                  strokeWidth="8"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="70"
-                  fill="none"
-                  stroke={grade.color}
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  transform="rotate(-90 80 80)"
-                  style={{
-                    transition: 'stroke-dashoffset 1.5s ease-out',
-                  }}
-                />
-              </svg>
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Typography variant="h3" sx={{ fontWeight: 800, color: grade.color }}>
-                  {percentage}%
-                </Typography>
-              </Box>
-            </Box>
-
-            <Typography variant="h4" sx={{ mb: 1, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-              {grade.emoji} {grade.label}
-            </Typography>
-
-            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 3 }}>
-              {percentage >= 70
-                ? '¡Felicitaciones! Estás preparado/a para el examen.'
-                : 'Sigue practicando, ¡tú puedes!'}
-            </Typography>
-
-            {/* Stats */}
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: { xs: 2, sm: 4 }, flexWrap: 'wrap' }}>
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#66BB6A' }}>
-                  {stats.correct}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  Correctas
-                </Typography>
-              </Box>
-              <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(92, 107, 192, 0.15)' }} />
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF5350' }}>
-                  {stats.wrong}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  Incorrectas
-                </Typography>
-              </Box>
-              <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(92, 107, 192, 0.15)' }} />
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#FFA726' }}>
-                  {stats.skipped}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  Saltadas
-                </Typography>
-              </Box>
-              <Divider orientation="vertical" flexItem sx={{ borderColor: 'rgba(92, 107, 192, 0.15)' }} />
-              <Box sx={{ textAlign: 'center' }}>
-                <Typography variant="h4" sx={{ fontWeight: 700, color: '#7986CB' }}>
-                  {stats.total}
-                </Typography>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-                  Total
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
-
-        {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mb: 4 }}>
-          <Button
-            variant="contained"
-            onClick={onRestart}
-            startIcon={<ReplayRoundedIcon />}
-            sx={{
-              background: 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)',
-              py: 1.5,
-              px: 4,
-              fontSize: '1rem',
-              boxShadow: '0 6px 24px rgba(92, 107, 192, 0.35)',
-              '&:hover': {
-                background: 'linear-gradient(135deg, #7986CB 0%, #5C6BC0 100%)',
-                transform: 'translateY(-2px)',
-              },
-              transition: 'all 0.3s ease',
+          <div
+            style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              margin: '0 auto 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: isPassing
+                ? 'var(--md-sys-color-success-container)'
+                : 'var(--md-sys-color-error-container)',
+              color: isPassing
+                ? 'var(--md-sys-color-on-success-container)'
+                : 'var(--md-sys-color-on-error-container)',
+              border: `4px solid ${isPassing ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)'}`,
             }}
           >
-            Volver a empezar
-          </Button>
-          {stats.wrong + stats.skipped > 0 && (
-            <Button
-              variant="outlined"
-              onClick={onRetryWrong}
-              startIcon={<RefreshRoundedIcon />}
-              sx={{
-                borderColor: '#EF5350',
-                color: '#EF5350',
-                py: 1.5,
-                px: 4,
-                fontSize: '1rem',
-                '&:hover': {
-                  borderColor: '#E57373',
-                  bgcolor: 'rgba(239, 83, 80, 0.05)',
-                },
+            <span style={{ fontSize: '28px', fontWeight: 800 }}>{percentage}%</span>
+            <span className="md-typescale-label-small" style={{ fontWeight: 600 }}>
+              PUNTAJE
+            </span>
+          </div>
+
+          <h2 className="md-typescale-headline-medium" style={{ fontWeight: 700, margin: '0 0 8px' }}>
+            {isPassing ? '¡Felicitaciones! Has Aprobado' : '¡Examen Finalizado! Sigue Practicando'}
+          </h2>
+
+          <p
+            className="md-typescale-body-medium"
+            style={{
+              color: 'var(--md-sys-color-on-surface-variant)',
+              maxWidth: '520px',
+              margin: '0 auto 24px',
+            }}
+          >
+            {isPassing
+              ? 'Has demostrado un sólido conocimiento de la normativa oficial de Isapres, CAEC, GES y fiscalización.'
+              : 'El porcentaje mínimo sugerido para la prueba es de 75%. Revisa a continuación las preguntas falladas y reinténtalas.'}
+          </p>
+
+          {/* Stats Badges Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '12px',
+              marginBottom: '28px',
+            }}
+          >
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                backgroundColor: 'var(--md-sys-color-surface-container-lowest)',
               }}
             >
-              Reintentar falladas ({stats.wrong + stats.skipped})
-            </Button>
-          )}
-        </Box>
+              <span className="material-symbols-outlined" style={{ color: 'var(--md-sys-color-primary)', fontSize: '24px' }}>
+                format_list_numbered
+              </span>
+              <div className="md-typescale-headline-small" style={{ fontWeight: 700, margin: '6px 0 2px' }}>
+                {totalAnswered}
+              </div>
+              <div className="md-typescale-label-small" style={{ color: 'var(--md-sys-color-on-surface-variant)' }}>
+                Total Respondidas
+              </div>
+            </div>
 
-        {/* Wrong Answers Detail */}
-        {Object.keys(wrongByTema).length > 0 && (
-          <Box className="animate-fade-in">
-            <Typography variant="h6" sx={{ mb: 2, color: 'text.secondary', fontWeight: 600 }}>
-              📋 Preguntas a repasar
-            </Typography>
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                backgroundColor: 'var(--md-sys-color-success-container)',
+                color: 'var(--md-sys-color-on-success-container)',
+                border: 'none',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
+                check_circle
+              </span>
+              <div className="md-typescale-headline-small" style={{ fontWeight: 700, margin: '6px 0 2px' }}>
+                {stats.correct}
+              </div>
+              <div className="md-typescale-label-small" style={{ fontWeight: 600 }}>
+                Correctas
+              </div>
+            </div>
 
-            {Object.entries(wrongByTema)
-              .sort(([a], [b]) => parseInt(a) - parseInt(b))
-              .map(([temaNum, temaData]) => (
-                <Accordion
-                  key={temaNum}
-                  sx={{
-                    bgcolor: 'rgba(19, 24, 41, 0.7)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(92, 107, 192, 0.1)',
-                    mb: 1.5,
-                    borderRadius: '12px !important',
-                    '&:before': { display: 'none' },
-                    '&.Mui-expanded': { mb: 1.5 },
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                backgroundColor: 'var(--md-sys-color-error-container)',
+                color: 'var(--md-sys-color-on-error-container)',
+                border: 'none',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
+                cancel
+              </span>
+              <div className="md-typescale-headline-small" style={{ fontWeight: 700, margin: '6px 0 2px' }}>
+                {stats.wrong}
+              </div>
+              <div className="md-typescale-label-small" style={{ fontWeight: 600 }}>
+                Incorrectas
+              </div>
+            </div>
+
+            <div
+              className="m3-card-outlined"
+              style={{
+                padding: '16px',
+                backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                border: 'none',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>
+                skip_next
+              </span>
+              <div className="md-typescale-headline-small" style={{ fontWeight: 700, margin: '6px 0 2px' }}>
+                {stats.skipped}
+              </div>
+              <div className="md-typescale-label-small" style={{ color: 'var(--md-sys-color-on-surface-variant)' }}>
+                Omitidas
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px',
+            }}
+          >
+            {stats.wrong > 0 && (
+              <md-filled-button
+                onClick={onRetryWrong}
+                style={{
+                  '--md-filled-button-container-shape': '9999px',
+                  '--md-filled-button-container-height': '48px',
+                  padding: '0 24px',
+                }}
+              >
+                <span className="material-symbols-outlined" slot="icon" style={{ fontSize: '20px' }}>
+                  replay
+                </span>
+                Reintentar {stats.wrong} Falladas
+              </md-filled-button>
+            )}
+
+            <md-outlined-button
+              onClick={onRestart}
+              style={{
+                '--md-outlined-button-container-shape': '9999px',
+                '--md-outlined-button-container-height': '48px',
+                padding: '0 24px',
+              }}
+            >
+              <span className="material-symbols-outlined" slot="icon" style={{ fontSize: '20px' }}>
+                home
+              </span>
+              Volver al Menú Principal
+            </md-outlined-button>
+          </div>
+        </section>
+
+        {/* Detailed Review Section */}
+        <section>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
+              marginBottom: '16px',
+            }}
+          >
+            <h3 className="md-typescale-title-large" style={{ fontWeight: 600, margin: 0 }}>
+              Revisión Detallada de Respuestas
+            </h3>
+
+            {/* Filter buttons */}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setFilter('all')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${filter === 'all' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: filter === 'all' ? 'var(--md-sys-color-primary)' : 'transparent',
+                  color: filter === 'all' ? 'var(--md-sys-color-on-primary)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Todas ({answeredQuestionsList.length})
+              </button>
+
+              <button
+                onClick={() => setFilter('wrong')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${filter === 'wrong' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: filter === 'wrong' ? 'var(--md-sys-color-error)' : 'transparent',
+                  color: filter === 'wrong' ? 'var(--md-sys-color-on-error)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Solo Falladas ({stats.wrong})
+              </button>
+
+              <button
+                onClick={() => setFilter('correct')}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--md-sys-shape-corner-full)',
+                  border: `1px solid ${filter === 'correct' ? 'transparent' : 'var(--md-sys-color-outline)'}`,
+                  backgroundColor: filter === 'correct' ? 'var(--md-sys-color-success)' : 'transparent',
+                  color: filter === 'correct' ? 'var(--md-sys-color-on-success)' : 'var(--md-sys-color-on-surface)',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                Solo Correctas ({stats.correct})
+              </button>
+            </div>
+          </div>
+
+          {/* List of Questions */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {filteredQuestions.map((item, idx) => {
+              const q = item.question;
+              return (
+                <div
+                  key={q.id}
+                  className="m3-card-outlined"
+                  style={{
+                    padding: '20px',
+                    backgroundColor: 'var(--md-sys-color-surface-container-lowest)',
+                    borderLeft: `5px solid ${
+                      item.isCorrect ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)'
+                    }`,
                   }}
                 >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreRoundedIcon sx={{ color: 'text.secondary' }} />}
-                    sx={{ px: 2.5 }}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span
+                      className="md-typescale-label-small"
+                      style={{
+                        padding: '2px 8px',
+                        borderRadius: 'var(--md-sys-shape-corner-small)',
+                        backgroundColor: 'var(--md-sys-color-surface-container-high)',
+                        color: 'var(--md-sys-color-on-surface-variant)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Pregunta #{q.id} • Tema {q.tema}
+                    </span>
+
+                    <span
+                      className="md-typescale-label-small"
+                      style={{
+                        padding: '3px 10px',
+                        borderRadius: 'var(--md-sys-shape-corner-full)',
+                        backgroundColor: item.isCorrect
+                          ? 'var(--md-sys-color-success-container)'
+                          : 'var(--md-sys-color-error-container)',
+                        color: item.isCorrect
+                          ? 'var(--md-sys-color-on-success-container)'
+                          : 'var(--md-sys-color-on-error-container)',
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                        {item.isCorrect ? 'check_circle' : 'cancel'}
+                      </span>
+                      {item.isCorrect ? 'Correcta' : item.skipped ? 'Omitida' : 'Incorrecta'}
+                    </span>
+                  </div>
+
+                  <p
+                    className="md-typescale-title-small"
+                    style={{
+                      fontWeight: 600,
+                      lineHeight: 1.4,
+                      marginBottom: '14px',
+                      color: 'var(--md-sys-color-on-surface)',
+                      whiteSpace: 'pre-line',
+                    }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <Chip
-                        label={`Tema ${temaNum}`}
-                        size="small"
-                        sx={{
-                          bgcolor: 'rgba(239, 83, 80, 0.1)',
-                          color: '#E57373',
-                          fontWeight: 600,
-                          fontSize: '0.7rem',
-                        }}
-                      />
-                      <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 500 }}>
-                        {temaData.title}
-                      </Typography>
-                      <Chip
-                        label={temaData.questions.length}
-                        size="small"
-                        sx={{
-                          bgcolor: 'rgba(239, 83, 80, 0.08)',
-                          color: '#EF5350',
-                          fontWeight: 700,
-                          height: 22,
-                          minWidth: 22,
-                        }}
-                      />
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ px: 2.5, pb: 2.5 }}>
-                    {temaData.questions.map((q, qi) => (
-                      <Box
-                        key={q.id}
-                        sx={{
-                          p: 2,
-                          mb: qi < temaData.questions.length - 1 ? 1.5 : 0,
-                          borderRadius: '10px',
-                          bgcolor: 'rgba(10, 14, 26, 0.5)',
-                          border: '1px solid rgba(92, 107, 192, 0.08)',
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: 'text.primary',
-                            mb: 1.5,
-                            fontWeight: 500,
-                            lineHeight: 1.6,
-                            whiteSpace: 'pre-line',
-                            fontSize: '0.85rem',
+                    {q.question}
+                  </p>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {q.options.map((opt, optIdx) => {
+                      const isCorrectAnswer = optIdx === q.correctIndex;
+                      const wasSelectedByUser = optIdx === item.selected;
+
+                      let bg = 'var(--md-sys-color-surface-container-low)';
+                      let border = 'transparent';
+                      let color = 'var(--md-sys-color-on-surface)';
+
+                      if (isCorrectAnswer) {
+                        bg = 'var(--md-sys-color-success-container)';
+                        border = 'var(--md-sys-color-success)';
+                        color = 'var(--md-sys-color-on-success-container)';
+                      } else if (wasSelectedByUser && !item.isCorrect) {
+                        bg = 'var(--md-sys-color-error-container)';
+                        border = 'var(--md-sys-color-error)';
+                        color = 'var(--md-sys-color-on-error-container)';
+                      }
+
+                      return (
+                        <div
+                          key={optIdx}
+                          style={{
+                            padding: '10px 14px',
+                            borderRadius: 'var(--md-sys-shape-corner-medium)',
+                            backgroundColor: bg,
+                            border: `1px solid ${border}`,
+                            color: color,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            fontSize: '14px',
                           }}
                         >
-                          {q.question.length > 200 ? q.question.substring(0, 200) + '...' : q.question}
-                        </Typography>
-
-                        {q.skipped ? (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <SkipNextRoundedIcon sx={{ color: '#FFA726', fontSize: 18 }} />
-                            <Typography variant="caption" sx={{ color: '#FFA726', fontWeight: 500 }}>
-                              Saltada
-                            </Typography>
-                          </Box>
-                        ) : (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <CancelRoundedIcon sx={{ color: '#EF5350', fontSize: 18 }} />
-                            <Typography variant="caption" sx={{ color: '#E57373' }}>
-                              Respondiste: <strong>{optionLetters[q.userAnswer]}</strong>
-                            </Typography>
-                          </Box>
-                        )}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                          <CheckCircleRoundedIcon sx={{ color: '#66BB6A', fontSize: 18 }} />
-                          <Typography variant="caption" sx={{ color: '#81C784' }}>
-                            Correcta: <strong>{optionLetters[q.correctIndex]}.</strong> {q.options[q.correctIndex]}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    ))}
-                  </AccordionDetails>
-                </Accordion>
-              ))}
-          </Box>
-        )}
-      </Container>
-    </Box>
+                          <span style={{ fontWeight: 700 }}>{LETTERS[optIdx]}.</span>
+                          <span style={{ flex: 1 }}>{opt}</span>
+                          {isCorrectAnswer && (
+                            <span
+                              className="material-symbols-outlined"
+                              style={{ color: 'var(--md-sys-color-success)', fontSize: '20px' }}
+                              title="Respuesta correcta oficial"
+                            >
+                              check_circle
+                            </span>
+                          )}
+                          {wasSelectedByUser && !item.isCorrect && (
+                            <span
+                              className="material-symbols-outlined"
+                              style={{ color: 'var(--md-sys-color-error)', fontSize: '20px' }}
+                              title="Tu respuesta (incorrecta)"
+                            >
+                              cancel
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

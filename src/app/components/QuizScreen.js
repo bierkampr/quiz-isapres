@@ -1,29 +1,9 @@
 'use client';
 
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  LinearProgress,
-  Chip,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormControl,
-  IconButton,
-} from '@mui/material';
-import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
-import SkipNextRoundedIcon from '@mui/icons-material/SkipNextRounded';
-import VerifiedRoundedIcon from '@mui/icons-material/VerifiedRounded';
-import TaskAltRoundedIcon from '@mui/icons-material/TaskAltRounded';
-import HighlightOffRoundedIcon from '@mui/icons-material/HighlightOffRounded';
+import { useMemo } from 'react';
+import TopAppBar from './TopAppBar';
 
-const optionLetters = ['A', 'B', 'C', 'D'];
+const LETTERS = ['A', 'B', 'C', 'D', 'E'];
 
 export default function QuizScreen({
   question,
@@ -36,336 +16,344 @@ export default function QuizScreen({
   onNext,
   onSkip,
   stats,
+  onExit,
 }) {
-  const progress = ((currentIndex + 1) / totalQuestions) * 100;
-  const isLastQuestion = currentIndex === totalQuestions - 1;
-
-  const getOptionStyle = (optionIndex) => {
-    if (!isVerified) {
-      if (selectedOption === optionIndex) {
-        return {
-          border: '2px solid #5C6BC0',
-          bgcolor: 'rgba(92, 107, 192, 0.1)',
-        };
-      }
-      return {
-        border: '2px solid rgba(92, 107, 192, 0.12)',
-        bgcolor: 'transparent',
-        '&:hover': {
-          border: '2px solid rgba(92, 107, 192, 0.3)',
-          bgcolor: 'rgba(92, 107, 192, 0.05)',
-        },
-      };
-    }
-
-    // Verified state
-    if (optionIndex === question.correctIndex) {
-      return {
-        border: '2px solid #66BB6A',
-        bgcolor: 'rgba(102, 187, 106, 0.1)',
-      };
-    }
-    if (selectedOption === optionIndex && optionIndex !== question.correctIndex) {
-      return {
-        border: '2px solid #EF5350',
-        bgcolor: 'rgba(239, 83, 80, 0.1)',
-      };
-    }
-    return {
-      border: '2px solid rgba(92, 107, 192, 0.08)',
-      bgcolor: 'transparent',
-      opacity: 0.5,
-    };
-  };
-
-  const getOptionIcon = (optionIndex) => {
-    if (!isVerified) return null;
-    if (optionIndex === question.correctIndex) {
-      return <CheckCircleRoundedIcon sx={{ color: '#66BB6A', fontSize: 22 }} />;
-    }
-    if (selectedOption === optionIndex && optionIndex !== question.correctIndex) {
-      return <CancelRoundedIcon sx={{ color: '#EF5350', fontSize: 22 }} />;
-    }
-    return null;
-  };
+  const progressValue = (currentIndex + 1) / totalQuestions;
+  const isCorrect = isVerified && selectedOption === question.correctIndex;
+  const isWrong = isVerified && selectedOption !== question.correctIndex;
 
   return (
-    <Box sx={{ minHeight: '100vh', pb: 4 }}>
-      {/* Top bar */}
-      <Box
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          bgcolor: 'rgba(10, 14, 26, 0.85)',
-          backdropFilter: 'blur(20px)',
-          borderBottom: '1px solid rgba(92, 107, 192, 0.1)',
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <TopAppBar
+        title="Quiz Isapres"
+        subtitle={`Pregunta ${currentIndex + 1} de ${totalQuestions}`}
+        showRestart={true}
+        onRestart={onExit}
+      />
+
+      {/* Material 3 Linear Progress Bar */}
+      <div style={{ width: '100%', height: '4px', backgroundColor: 'var(--md-sys-color-surface-container-highest)' }}>
+        <div
+          style={{
+            height: '100%',
+            width: `${Math.round(progressValue * 100)}%`,
+            backgroundColor: 'var(--md-sys-color-primary)',
+            transition: 'width 0.3s cubic-bezier(0.2, 0, 0, 1)',
+          }}
+        />
+      </div>
+
+      <main
+        style={{
+          flex: 1,
+          maxWidth: '800px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '20px 16px 80px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
         }}
       >
-        <Container maxWidth="md">
-          <Box sx={{ py: 1.5 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                Pregunta {currentIndex + 1} de {totalQuestions}
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip
-                  icon={<TaskAltRoundedIcon sx={{ fontSize: 14 }} />}
-                  label={stats.correct}
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(102, 187, 106, 0.12)',
-                    color: '#66BB6A',
-                    fontWeight: 700,
-                    height: 26,
-                    '& .MuiChip-icon': { color: '#66BB6A' },
-                  }}
-                />
-                <Chip
-                  icon={<HighlightOffRoundedIcon sx={{ fontSize: 14 }} />}
-                  label={stats.wrong}
-                  size="small"
-                  sx={{
-                    bgcolor: 'rgba(239, 83, 80, 0.12)',
-                    color: '#EF5350',
-                    fontWeight: 700,
-                    height: 26,
-                    '& .MuiChip-icon': { color: '#EF5350' },
-                  }}
-                />
-              </Box>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={progress}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                bgcolor: 'rgba(92, 107, 192, 0.1)',
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 3,
-                  background: 'linear-gradient(90deg, #5C6BC0, #26A69A)',
-                },
-              }}
-            />
-          </Box>
-        </Container>
-      </Box>
-
-      <Container maxWidth="md" sx={{ pt: 3 }}>
-        {/* Topic chip */}
-        <Box className="animate-slide-in" sx={{ mb: 2 }}>
-          <Chip
-            label={`Tema ${question.tema}: ${question.temaTitle}`}
-            size="small"
-            sx={{
-              bgcolor: 'rgba(92, 107, 192, 0.1)',
-              color: '#9FA8DA',
-              fontWeight: 500,
-              fontSize: '0.75rem',
-            }}
-          />
-        </Box>
-
-        {/* Question */}
-        <Card
-          className="glass-card animate-slide-in"
-          sx={{ mb: 3 }}
+        {/* Meta Bar: Tema & Stats */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '10px',
+          }}
         >
-          <CardContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
-            <Typography
-              variant="h6"
-              sx={{
-                color: 'text.primary',
-                fontWeight: 500,
-                lineHeight: 1.7,
-                fontSize: { xs: '0.95rem', sm: '1.05rem' },
-                whiteSpace: 'pre-line',
-              }}
-            >
-              {question.question}
-            </Typography>
-          </CardContent>
-        </Card>
-
-        {/* Options */}
-        <Box className="animate-slide-in" sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 3 }}>
-          {question.options.map((option, index) => (
-            <Box
-              key={index}
-              onClick={() => onSelectOption(index)}
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 1.5,
-                p: { xs: 2, sm: 2.5 },
-                borderRadius: '14px',
-                cursor: isVerified ? 'default' : 'pointer',
-                transition: 'all 0.25s ease',
-                ...getOptionStyle(index),
-              }}
-            >
-              <Box
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  bgcolor: isVerified && index === question.correctIndex
-                    ? 'rgba(102, 187, 106, 0.15)'
-                    : isVerified && selectedOption === index && index !== question.correctIndex
-                      ? 'rgba(239, 83, 80, 0.15)'
-                      : selectedOption === index
-                        ? 'rgba(92, 107, 192, 0.2)'
-                        : 'rgba(92, 107, 192, 0.08)',
-                  mt: 0.2,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: '0.8rem',
-                    color: isVerified && index === question.correctIndex
-                      ? '#66BB6A'
-                      : isVerified && selectedOption === index && index !== question.correctIndex
-                        ? '#EF5350'
-                        : selectedOption === index
-                          ? '#7986CB'
-                          : '#9FA8DA',
-                  }}
-                >
-                  {optionLetters[index]}
-                </Typography>
-              </Box>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: isVerified && index === question.correctIndex
-                    ? '#81C784'
-                    : isVerified && selectedOption === index && index !== question.correctIndex
-                      ? '#E57373'
-                      : 'text.primary',
-                  fontWeight: isVerified && index === question.correctIndex ? 600 : 400,
-                  flex: 1,
-                  fontSize: { xs: '0.88rem', sm: '0.95rem' },
-                  lineHeight: 1.6,
-                }}
-              >
-                {option}
-              </Typography>
-              {getOptionIcon(index)}
-            </Box>
-          ))}
-        </Box>
-
-        {/* Feedback message */}
-        {isVerified && (
-          <Box
-            className="animate-fade-in"
-            sx={{
-              display: 'flex',
+          <div
+            style={{
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 1.5,
-              p: 2,
-              borderRadius: '12px',
-              mb: 3,
-              bgcolor: selectedOption === question.correctIndex
-                ? 'rgba(102, 187, 106, 0.08)'
-                : 'rgba(239, 83, 80, 0.08)',
-              border: `1px solid ${selectedOption === question.correctIndex
-                ? 'rgba(102, 187, 106, 0.2)'
-                : 'rgba(239, 83, 80, 0.2)'}`,
+              gap: '6px',
+              padding: '6px 12px',
+              borderRadius: 'var(--md-sys-shape-corner-full)',
+              backgroundColor: 'var(--md-sys-color-secondary-container)',
+              color: 'var(--md-sys-color-on-secondary-container)',
             }}
           >
-            {selectedOption === question.correctIndex ? (
-              <>
-                <CheckCircleRoundedIcon sx={{ color: '#66BB6A', fontSize: 28 }} />
-                <Typography sx={{ color: '#81C784', fontWeight: 500 }}>
-                  ¡Correcto! 🎉
-                </Typography>
-              </>
-            ) : (
-              <>
-                <CancelRoundedIcon sx={{ color: '#EF5350', fontSize: 28 }} />
-                <Typography sx={{ color: '#E57373', fontWeight: 500 }}>
-                  Incorrecto — La respuesta correcta es la <strong>{optionLetters[question.correctIndex]}</strong>
-                </Typography>
-              </>
-            )}
-          </Box>
-        )}
+            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>
+              folder
+            </span>
+            <span className="md-typescale-label-medium" style={{ fontWeight: 600 }}>
+              Tema {question.tema}: {question.temaTitle}
+            </span>
+          </div>
 
-        {/* Action buttons */}
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-          {!isVerified ? (
-            <>
-              <Button
-                variant="contained"
-                onClick={onVerify}
-                disabled={selectedOption === null}
-                startIcon={<VerifiedRoundedIcon />}
-                sx={{
-                  background: selectedOption !== null
-                    ? 'linear-gradient(135deg, #5C6BC0 0%, #3949AB 100%)'
-                    : undefined,
-                  py: 1.5,
-                  px: 4,
-                  fontSize: '1rem',
-                  boxShadow: selectedOption !== null
-                    ? '0 6px 24px rgba(92, 107, 192, 0.35)'
-                    : 'none',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, #7986CB 0%, #5C6BC0 100%)',
-                  },
-                }}
-              >
-                Verificar
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={onSkip}
-                startIcon={<SkipNextRoundedIcon />}
-                sx={{
-                  borderColor: 'rgba(92, 107, 192, 0.3)',
-                  color: 'text.secondary',
-                  py: 1.5,
-                  px: 3,
-                  '&:hover': {
-                    borderColor: 'rgba(92, 107, 192, 0.5)',
-                    bgcolor: 'rgba(92, 107, 192, 0.05)',
-                  },
-                }}
-              >
-                Saltar
-              </Button>
-            </>
-          ) : (
-            <Button
-              variant="contained"
-              onClick={onNext}
-              endIcon={<ArrowForwardRoundedIcon />}
-              sx={{
-                background: 'linear-gradient(135deg, #26A69A 0%, #00897B 100%)',
-                py: 1.5,
-                px: 5,
-                fontSize: '1rem',
-                boxShadow: '0 6px 24px rgba(38, 166, 154, 0.35)',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #4DB6AC 0%, #26A69A 100%)',
-                  transform: 'translateY(-2px)',
-                },
-                transition: 'all 0.3s ease',
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span
+              className="md-typescale-label-medium"
+              style={{
+                padding: '4px 10px',
+                borderRadius: 'var(--md-sys-shape-corner-full)',
+                backgroundColor: 'var(--md-sys-color-success-container)',
+                color: 'var(--md-sys-color-on-success-container)',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              {isLastQuestion ? 'Ver Resultados' : 'Siguiente'}
-            </Button>
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                check
+              </span>
+              {stats.correct}
+            </span>
+
+            <span
+              className="md-typescale-label-medium"
+              style={{
+                padding: '4px 10px',
+                borderRadius: 'var(--md-sys-shape-corner-full)',
+                backgroundColor: 'var(--md-sys-color-error-container)',
+                color: 'var(--md-sys-color-on-error-container)',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>
+                close
+              </span>
+              {stats.wrong}
+            </span>
+          </div>
+        </div>
+
+        {/* Question Card (M3 Elevated) */}
+        <section
+          className="m3-card-elevated m3-animate-in"
+          style={{
+            padding: '28px 24px',
+            backgroundColor: 'var(--md-sys-color-surface-container-low)',
+          }}
+        >
+          <div
+            style={{
+              display: 'inline-block',
+              padding: '4px 10px',
+              borderRadius: 'var(--md-sys-shape-corner-small)',
+              backgroundColor: 'var(--md-sys-color-surface-container-highest)',
+              color: 'var(--md-sys-color-on-surface-variant)',
+              fontWeight: 700,
+              fontSize: '12px',
+              marginBottom: '12px',
+              letterSpacing: '0.5px',
+            }}
+          >
+            PREGUNTA #{question.id}
+          </div>
+
+          <h2
+            className="md-typescale-title-large"
+            style={{
+              fontWeight: 600,
+              lineHeight: 1.45,
+              color: 'var(--md-sys-color-on-surface)',
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {question.question}
+          </h2>
+        </section>
+
+        {/* Options List */}
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {question.options.map((optionText, idx) => {
+            const letter = LETTERS[idx] || `${idx + 1}`;
+            const isSelected = selectedOption === idx;
+            const isThisCorrect = isVerified && idx === question.correctIndex;
+            const isThisWrongSelected = isVerified && isSelected && idx !== question.correctIndex;
+
+            let itemClasses = 'm3-option-item';
+            if (isSelected) itemClasses += ' m3-option-selected';
+            if (isVerified) itemClasses += ' m3-option-verified';
+            if (isThisCorrect) itemClasses += ' m3-option-correct';
+            if (isThisWrongSelected) itemClasses += ' m3-option-wrong';
+
+            return (
+              <button
+                key={idx}
+                className={itemClasses}
+                onClick={() => onSelectOption(idx)}
+                disabled={isVerified}
+                type="button"
+              >
+                <div className="m3-option-badge">{letter}</div>
+
+                <div style={{ flex: 1, textAlign: 'left', lineHeight: 1.45 }}>
+                  <span
+                    className="md-typescale-body-large"
+                    style={{
+                      display: 'block',
+                      fontWeight: isSelected || isThisCorrect ? 500 : 400,
+                      color: 'inherit',
+                    }}
+                  >
+                    {optionText}
+                  </span>
+                </div>
+
+                {/* Status Indicator Icon */}
+                <div style={{ flexShrink: 0, marginTop: '2px' }}>
+                  {isThisCorrect && (
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ color: 'var(--md-sys-color-success)', fontSize: '24px' }}
+                    >
+                      check_circle
+                    </span>
+                  )}
+                  {isThisWrongSelected && (
+                    <span
+                      className="material-symbols-outlined"
+                      style={{ color: 'var(--md-sys-color-error)', fontSize: '24px' }}
+                    >
+                      cancel
+                    </span>
+                  )}
+                  {!isVerified && (
+                    <div
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        border: `2px solid ${
+                          isSelected ? 'var(--md-sys-color-primary)' : 'var(--md-sys-color-outline)'
+                        }`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                      }}
+                    >
+                      {isSelected && (
+                        <div
+                          style={{
+                            width: '10px',
+                            height: '10px',
+                            borderRadius: '50%',
+                            backgroundColor: 'var(--md-sys-color-primary)',
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </section>
+
+        {/* Post-Verification Feedback Banner */}
+        {isVerified && (
+          <div
+            className="m3-animate-in"
+            style={{
+              padding: '16px 20px',
+              borderRadius: 'var(--md-sys-shape-corner-large)',
+              backgroundColor: isCorrect
+                ? 'var(--md-sys-color-success-container)'
+                : 'var(--md-sys-color-error-container)',
+              color: isCorrect
+                ? 'var(--md-sys-color-on-success-container)'
+                : 'var(--md-sys-color-on-error-container)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+            }}
+          >
+            <span
+              className="material-symbols-outlined"
+              style={{
+                fontSize: '28px',
+                color: isCorrect ? 'var(--md-sys-color-success)' : 'var(--md-sys-color-error)',
+              }}
+            >
+              {isCorrect ? 'check_circle' : 'cancel'}
+            </span>
+            <div>
+              <h4 className="md-typescale-title-medium" style={{ margin: 0, fontWeight: 700 }}>
+                {isCorrect ? '¡Respuesta Correcta!' : 'Respuesta Incorrecta'}
+              </h4>
+              <p className="md-typescale-body-medium" style={{ margin: '2px 0 0', opacity: 0.9 }}>
+                {isCorrect
+                  ? 'Has seleccionado la alternativa correcta destacada en el temario oficial.'
+                  : `La opción correcta es la ${LETTERS[question.correctIndex]}: "${
+                      question.options[question.correctIndex]
+                    }". Ha sido marcada en verde.`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Action Controls Bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            marginTop: '12px',
+            paddingTop: '16px',
+            borderTop: '1px solid var(--md-sys-color-outline-variant)',
+          }}
+        >
+          {!isVerified ? (
+            <>
+              <md-outlined-button
+                onClick={onSkip}
+                style={{
+                  '--md-outlined-button-container-shape': '9999px',
+                }}
+              >
+                <span className="material-symbols-outlined" slot="icon" style={{ fontSize: '20px' }}>
+                  skip_next
+                </span>
+                Saltar
+              </md-outlined-button>
+
+              <md-filled-button
+                onClick={onVerify}
+                disabled={selectedOption === null}
+                style={{
+                  '--md-filled-button-container-shape': '9999px',
+                  '--md-filled-button-container-height': '46px',
+                  padding: '0 24px',
+                }}
+              >
+                <span className="material-symbols-outlined" slot="icon" style={{ fontSize: '20px' }}>
+                  check
+                </span>
+                Verificar Respuesta
+              </md-filled-button>
+            </>
+          ) : (
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+              <md-filled-button
+                onClick={onNext}
+                style={{
+                  '--md-filled-button-container-shape': '9999px',
+                  '--md-filled-button-container-height': '48px',
+                  padding: '0 28px',
+                  fontSize: '15px',
+                  fontWeight: '600',
+                }}
+              >
+                {currentIndex < totalQuestions - 1 ? 'Siguiente Pregunta' : 'Ver Resultados Finales'}
+                <span className="material-symbols-outlined" slot="icon" style={{ fontSize: '20px' }}>
+                  arrow_forward
+                </span>
+              </md-filled-button>
+            </div>
           )}
-        </Box>
-      </Container>
-    </Box>
+        </div>
+      </main>
+    </div>
   );
 }

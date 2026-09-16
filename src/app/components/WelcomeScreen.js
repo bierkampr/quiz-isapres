@@ -345,6 +345,7 @@ export default function WelcomeScreen({ onStart, totalQuestions = 103 }) {
           {/* Primary Action Button */}
           <div>
             <md-filled-button
+              suppressHydrationWarning
               onClick={handleStart}
               style={{
                 '--md-filled-button-container-height': '54px',

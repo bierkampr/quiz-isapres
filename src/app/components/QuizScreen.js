@@ -371,6 +371,7 @@ export default function QuizScreen({
             {!isVerified ? (
               <>
                 <md-outlined-button
+                  suppressHydrationWarning
                   onClick={onSkip}
                   style={{
                     '--md-outlined-button-container-shape': '9999px',
@@ -385,6 +386,7 @@ export default function QuizScreen({
                 </md-outlined-button>
 
                 <md-filled-button
+                  suppressHydrationWarning
                   onClick={onVerify}
                   disabled={selectedOption === null}
                   style={{
@@ -403,6 +405,7 @@ export default function QuizScreen({
               </>
             ) : (
               <md-filled-button
+                suppressHydrationWarning
                 onClick={onNext}
                 style={{
                   width: '100%',

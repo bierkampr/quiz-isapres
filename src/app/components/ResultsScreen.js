@@ -207,6 +207,7 @@ export default function ResultsScreen({
           >
             {stats.wrong > 0 && (
               <md-filled-button
+                suppressHydrationWarning
                 onClick={onRetryWrong}
                 style={{
                   '--md-filled-button-container-shape': '9999px',
@@ -222,6 +223,7 @@ export default function ResultsScreen({
             )}
 
             <md-outlined-button
+              suppressHydrationWarning
               onClick={onRestart}
               style={{
                 '--md-outlined-button-container-shape': '9999px',

@@ -1,13 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import '@material/web/all.js';
 
 export default function MaterialProvider({ children }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    // Dynamically import @material/web custom elements after React hydration completes
+    import('@material/web/all.js').then(() => {
+      setMounted(true);
+    });
   }, []);
 
   return <>{children}</>;
